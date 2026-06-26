@@ -80,15 +80,22 @@ export default function Pedidos() {
   const lista = filtro==="todos" ? pedidos : pedidos.filter(p=>p.estado===filtro);
 
   // Cambiar estado
-  const cambiarEstado = async (id, estado) => {
-    try {
-      const actualizado = await api(`/pedidos/${id}/estado`, {
-        method:"PATCH", body:JSON.stringify({ estado })
-      });
-      setPedidos(prev => prev.map(p => p.id===id ? actualizado : p));
-      if (detalle?.id===id) setDetalle(actualizado);
-    } catch(e){ alert(e.message); }
-  };
+const cambiarEstado = async (id, estado) => {
+  console.log("Enviando estado:", JSON.stringify(estado)); // ← VE QUÉ ENVÍA
+  try {
+    const actualizado = await api(`/pedidos/${id}/estado`, {
+      method:"PATCH", 
+      body:JSON.stringify({ 
+        estado: estado.trim(),  // ← Elimina espacios
+        observacion: ""
+      })
+    });
+    setPedidos(prev => prev.map(p => p.id===id ? actualizado : p));
+    if (detalle?.id===id) setDetalle(actualizado);
+  } catch(e){ 
+    alert("Error: " + e.message); 
+  }
+};
 
   // Agregar item al formulario
   const agregarItem = () => {
@@ -365,15 +372,19 @@ export default function Pedidos() {
         </div>
       )}
 
-      {/* ── PANEL DETALLE ── */}
-      {detalle && (
-        <div onClick={()=>setDetalle(null)} style={{
-          position:"fixed", inset:0, background:"rgba(0,0,0,.3)",
-          display:"flex", justifyContent:"flex-end", zIndex:200 }}>
-          <div onClick={e=>e.stopPropagation()} style={{
-            width: "min(360px,90%)", background:"#fff", height:"100%",
-            borderLeft:"1px solid #e7e5e4", padding:20, overflowY:"auto",
-            display:"flex", flexDirection:"column", gap:16 }}>
+{/* ── PANEL DETALLE ── */}
+{detalle && (
+  <div onClick={()=>setDetalle(null)} style={{
+    position:"fixed", inset:0, background:"rgba(0,0,0,.3)",
+    display:"flex", justifyContent:"flex-end", zIndex:200 }}>
+    <div onClick={e=>e.stopPropagation()} style={{
+      width: "min(360px,90%)", 
+      background:"#1a1918",  // ✅ CAMBIAR: Fondo oscuro
+      color:"#ffffff",       // ✅ CAMBIAR: Texto blanco
+      height:"100%",
+      borderLeft:"1px solid #363432", 
+      padding:20, overflowY:"auto",
+      display:"flex", flexDirection:"column", gap:16 }}>
 
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
               <div>

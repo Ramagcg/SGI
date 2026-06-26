@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
+import dashboardService from "../services/dashboardService";
 
 function StatCard({ icon, label, valor, color }) {
   return (
@@ -11,7 +12,7 @@ function StatCard({ icon, label, valor, color }) {
         <i className={`ti ${icon}`} style={{ fontSize: 22, color }} />
       </div>
       <div>
-        <div style={{ fontSize: 22, fontWeight: 600 }}>{valor}</div>
+        <div style={{ fontSize: 22, fontWeight: 600 }}>{valor ?? 0}</div>
         <div style={{ fontSize: 12, color: "#78716c" }}>{label}</div>
       </div>
     </div>
@@ -20,11 +21,66 @@ function StatCard({ icon, label, valor, color }) {
 
 export default function Dashboard() {
   const { usuario } = useAuth();
-  const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState({
+    pedidos: 0,
+    enFabricacion: 0,
+    clientes: 0,
+    productos: 0
+  });
+  const [estadoPedidos, setEstadoPedidos] = useState({
+    pendiente: 0,
+    fabricacion: 0,
+    calidad: 0,
+    listo: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    setStats({ pedidos: 0, enFabricacion: 0, clientes: 0, productos: 0 });
+    const cargarDatos = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Carga estadísticas generales y estado de pedidos en paralelo
+        const [stats, estado] = await Promise.all([
+          dashboardService.obtenerEstadisticas(),
+          dashboardService.obtenerEstadoPedidos()
+        ]);
+
+        setStats(stats);
+        setEstadoPedidos(estado);
+      } catch (err) {
+        console.error("Error cargando dashboard:", err);
+        setError("No se pudieron cargar los datos del dashboard");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    cargarDatos();
+
+    // Opcionalmente: recargar cada 30 segundos para mantener datos actualizados
+    const interval = setInterval(cargarDatos, 30000);
+    return () => clearInterval(interval);
   }, []);
+
+  if (error) {
+    return (
+      <div className="page">
+        <div style={{
+          backgroundColor: "#fee",
+          border: "1px solid #fcc",
+          borderRadius: 8,
+          padding: 16,
+          color: "#c00",
+          marginBottom: 20
+        }}>
+          ⚠️ {error}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="page">
@@ -45,10 +101,10 @@ export default function Dashboard() {
         gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
         gap: 14, marginBottom: 28
       }}>
-        <StatCard icon="ti-clipboard-list" label="Pedidos activos"    valor={stats?.pedidos}       color="#2563eb" />
-        <StatCard icon="ti-hammer"         label="En fabricación"     valor={stats?.enFabricacion} color="#d97706" />
-        <StatCard icon="ti-address-book"   label="Clientes"           valor={stats?.clientes}      color="#16a34a" />
-        <StatCard icon="ti-package"        label="Productos en stock" valor={stats?.productos}     color="#7c3aed" />
+        <StatCard icon="ti-clipboard-list" label="Pedidos activos"    valor={stats.pedidos}       color="#2563eb" />
+        <StatCard icon="ti-hammer"         label="En fabricación"     valor={stats.enFabricacion} color="#d97706" />
+        <StatCard icon="ti-address-book"   label="Clientes"           valor={stats.clientes}      color="#16a34a" />
+        <StatCard icon="ti-package"        label="Productos en stock" valor={stats.productos}     color="#7c3aed" />
       </div>
 
       {/* Accesos rápidos */}
@@ -77,17 +133,19 @@ export default function Dashboard() {
           Estado de pedidos
         </div>
         {[
-          { estado: "Pendiente",          clase: "badge-pendiente",   n: 0 },
-          { estado: "En Fabricación",     clase: "badge-fabricacion", n: 0 },
-          { estado: "Control de Calidad", clase: "badge-calidad",     n: 0 },
-          { estado: "Listo para Retirar", clase: "badge-listo",       n: 0 },
+          { estado: "Pendiente",          clase: "badge-pendiente",   key: "pendiente" },
+          { estado: "En Fabricación",     clase: "badge-fabricacion", key: "fabricacion" },
+          { estado: "Control de Calidad", clase: "badge-calidad",     key: "calidad" },
+          { estado: "Listo para Retirar", clase: "badge-listo",       key: "listo" },
         ].map(e => (
           <div key={e.estado} style={{
             display: "flex", justifyContent: "space-between", alignItems: "center",
             padding: "10px 0", borderBottom: "1px solid #f5f5f4"
           }}>
             <span className={`badge ${e.clase}`}>{e.estado}</span>
-            <span style={{ fontSize: 13, fontWeight: 500 }}>{e.n} pedidos</span>
+            <span style={{ fontSize: 13, fontWeight: 500 }}>
+              {estadoPedidos[e.key]} pedidos
+            </span>
           </div>
         ))}
       </div>

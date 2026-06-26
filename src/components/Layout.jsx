@@ -59,8 +59,12 @@ export default function Layout({ children }) {
               <i className={`ti ${dark ? "ti-moon" : "ti-sun"}`} style={{ fontSize:15 }} />
               {dark ? "Modo oscuro" : "Modo claro"}
             </div>
-            <button className={`theme-toggle ${dark ? "on" : ""}`} onClick={toggle}
-              title="Cambiar tema" aria-label="Cambiar tema" />
+
+        <button className={`theme-toggle ${dark ? "on" : ""}`} 
+        onClick={toggle} title="Cambiar tema" aria-label="Cambiar tema"
+        style={{border: dark ? "none" : "2px solid #000000",
+        }} />
+        
           </div>
           <div style={{ fontSize:12, fontWeight:600, color:"var(--color-text)", marginBottom:2 }}>{usuario?.nombre}</div>
           <div style={{ fontSize:11, color:"var(--color-muted)", marginBottom:10 }}>{usuario?.rol}</div>

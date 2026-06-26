@@ -61,14 +61,14 @@ export default function Monitor() {
     finally { setCargando(false); }
   }, [api]);
 
-  // Refresco automático cada 30 segundos
+  // Refresca automáticamente cada 30 segundos
   useEffect(() => {
     cargar();
     intervalRef.current = setInterval(cargar, 30000);
     return () => clearInterval(intervalRef.current);
   }, [cargar]);
 
-  // Detecta cambio de tema
+  // Detecta cambio el tema
   useEffect(() => {
     const observer = new MutationObserver(() => {
       setDark(document.documentElement.getAttribute("data-theme") === "dark");
